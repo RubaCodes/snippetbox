@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -16,9 +17,10 @@ type config struct {
 	dbConn    string
 }
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets *models.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -34,6 +36,10 @@ func main() {
 	// We also defer a call to db.Close(), so that the connection pool is closed
 	// before the main() function exits.
 	defer db.Close()
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		errorLog.Fatal(err)
+	}
 	//create a struct to hold global dependency SINGLETONS
 	app := application{
 		errorLog: errorLog,
@@ -41,6 +47,7 @@ func main() {
 		snippets: &models.SnippetModel{
 			DB: db,
 		},
+		templateCache: templateCache,
 	}
 	// instanciate a new httpServer with the custom configurations
 	srv := &http.Server{
