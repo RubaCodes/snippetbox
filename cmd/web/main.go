@@ -55,7 +55,7 @@ func main() {
 		ErrorLog: errorLog,
 		Handler:  app.routes(conf.staticDir),
 	}
-	infoLog.Printf("Starting server on %s", conf.addr)
+	infoLog.Printf("Starting server on http://localhost%s", conf.addr)
 	err = srv.ListenAndServe()
 	errorLog.Fatal(err)
 }
