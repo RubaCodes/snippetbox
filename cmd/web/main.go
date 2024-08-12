@@ -6,7 +6,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/alexedwards/scs/postgresstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form"
 	_ "github.com/lib/pq"
 	"snippetbox.rubacodes.com/internal/models"
@@ -18,11 +21,12 @@ type config struct {
 	dbConn    string
 }
 type application struct {
-	errorLog      *log.Logger
-	infoLog       *log.Logger
-	snippets      *models.SnippetModel
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder
+	errorLog       *log.Logger
+	infoLog        *log.Logger
+	snippets       *models.SnippetModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -42,6 +46,13 @@ func main() {
 	if err != nil {
 		errorLog.Fatal(err)
 	}
+	// Use the scs.New() function to initialize a new session manager. Then we
+	// configure it to use our MySQL database as the session store, and set a
+	// lifetime of 12 hours (so that sessions automatically expire 12 hours
+	// after first being created).
+	sessionManager := scs.New()
+	sessionManager.Store = postgresstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
 	//create a struct to hold global dependency SINGLETONS
 	app := application{
 		errorLog: errorLog,
@@ -49,8 +60,9 @@ func main() {
 		snippets: &models.SnippetModel{
 			DB: db,
 		},
-		templateCache: templateCache,
-		formDecoder:   form.NewDecoder(),
+		templateCache:  templateCache,
+		formDecoder:    form.NewDecoder(),
+		sessionManager: sessionManager,
 	}
 	// instanciate a new httpServer with the custom configurations
 	srv := &http.Server{
