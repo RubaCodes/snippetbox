@@ -48,10 +48,10 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 // di fatto il modello del form
 type snippetCreateForm struct {
-	Title   string
-	Content string
-	Expires int
-	validator.Validator
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
+	validator.Validator `form:"-"`
 }
 
 // Add a new snippetCreate handler, which for now returns a placeholder
@@ -67,25 +67,12 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	// Create some variables holding dummy data. We'll remove these later on
 	// during the build.
-	err := r.ParseForm()
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-	}
-	days, _ := strconv.Atoi(r.Form.Get("expires"))
+	var form snippetCreateForm
+	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	form := snippetCreateForm{
-		Title:   r.PostForm.Get("title"),
-		Content: r.PostForm.Get("content"),
-		Expires: days,
-	}
-	// Note: When we check the length of the title field, we’re using the
-	// utf8.RuneCountInString() function — not Go’s len() function. This is because we want
-	// to count the number of characters in the title rather than the number of bytes. To
-	// illustrate the difference, the string "Zoë" has 3 characters but a length of 4 bytes
-	// because of the umlauted ë character.
 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
 	form.CheckField(validator.MaxChars(form.Title, 100), "title", "This field cannot be more than 100 characters long")
 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")

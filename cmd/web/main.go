@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-playground/form"
 	_ "github.com/lib/pq"
 	"snippetbox.rubacodes.com/internal/models"
 )
@@ -21,6 +22,7 @@ type application struct {
 	infoLog       *log.Logger
 	snippets      *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
 }
 
 func main() {
@@ -48,6 +50,7 @@ func main() {
 			DB: db,
 		},
 		templateCache: templateCache,
+		formDecoder:   form.NewDecoder(),
 	}
 	// instanciate a new httpServer with the custom configurations
 	srv := &http.Server{
