@@ -1,19 +1,24 @@
 package validator
 
 import (
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
 
 type Validator struct {
-	FieldErrors map[string]string
+	NonFieldErrors []string
+	FieldErrors    map[string]string
 }
 
 // Valid() returns true if the FieldErrors map doesn't contain any entries.
 func (v *Validator) Validate() bool {
-	return len(v.FieldErrors) == 0
+	return len(v.FieldErrors) == 0 && len(v.NonFieldErrors) == 0
 }
-func (v *Validator) addFieldError(key string, errorMsg string) {
+func (v *Validator) AddNonFieldError(message string) {
+	v.NonFieldErrors = append(v.NonFieldErrors, message)
+}
+func (v *Validator) AddFieldError(key string, errorMsg string) {
 	// essendo un puntatore devo controllare che esita
 	if v.FieldErrors == nil {
 		v.FieldErrors = map[string]string{}
@@ -25,7 +30,7 @@ func (v *Validator) addFieldError(key string, errorMsg string) {
 }
 func (v *Validator) CheckField(ok bool, key, message string) {
 	if !ok {
-		v.addFieldError(key, message)
+		v.AddFieldError(key, message)
 	}
 }
 
@@ -47,4 +52,17 @@ func PermittedInt(value int, permittedValues ...int) bool {
 		}
 	}
 	return false
+}
+
+// MinChars() returns true if a value contains at least n characters.
+func MinChars(value string, n int) bool {
+	return utf8.RuneCountInString(value) >= n
+}
+
+var EmailRX = regexp.MustCompile(`[A-Za-z0-9\._%+\-]+@[A-Za-z0-9\.\-]+\.[A-Za-z]{2,}`)
+
+// Matches() returns true if a value matches a provided compiled regular
+// expression pattern.
+func Matches(value string, rx *regexp.Regexp) bool {
+	return rx.MatchString(value)
 }
