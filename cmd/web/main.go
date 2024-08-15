@@ -17,9 +17,8 @@ import (
 )
 
 type config struct {
-	addr      string
-	staticDir string
-	dbConn    string
+	addr   string
+	dbConn string
 }
 type application struct {
 	errorLog       *log.Logger
@@ -76,7 +75,7 @@ func main() {
 	srv := &http.Server{
 		Addr:      conf.addr,
 		ErrorLog:  errorLog,
-		Handler:   app.routes(conf.staticDir),
+		Handler:   app.routes(),
 		TLSConfig: tlsConfig,
 		// Add Idle, Read and Write timeouts to the server.
 		IdleTimeout:  time.Minute,
