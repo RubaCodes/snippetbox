@@ -30,6 +30,10 @@ func (app *application) routes() http.Handler {
 	// included in our nav.tmpl partial and could potentially appear on any page of our application.
 	// So, because of this, we need to use our noSurf() middleware on all of our application routes
 	// (apart from /static/*filepath ).
+	//
+	// Add a new GET /ping route.
+	router.HandlerFunc(http.MethodGet, "/ping", ping)
+
 	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
 	router.Handler(http.MethodGet, "/snippet/view/:id", dynamic.ThenFunc(app.snippetView))
